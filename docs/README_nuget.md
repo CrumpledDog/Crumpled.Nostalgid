@@ -6,7 +6,7 @@
 
 Surface and use Umbraco's underlying integer node IDs in modern backoffice workflows.
 
-<img src="https://raw.githubusercontent.com/CrumpledDog/Crumpled.Nostalgid/main/docs/crumpled-nostalgid.png" width="150" />
+<img src="https://raw.githubusercontent.com/CrumpledDog/Crumpled.Nostalgid/release/v1/docs/crumpled-nostalgid.png" width="150" />
 
 ## What it does
 
@@ -17,7 +17,7 @@ Surface and use Umbraco's underlying integer node IDs in modern backoffice workf
 - Redirects to modern key-based workspace URLs.
 - Adds a workspace view to display and copy the underlying integer ID.
 
-<img src="https://raw.githubusercontent.com/CrumpledDog/Crumpled.Nostalgid/main/docs/Nostalgid-workspace-view.jpg" />
+<img src="https://raw.githubusercontent.com/CrumpledDog/Crumpled.Nostalgid/release/v1/docs/Nostalgid-workspace-view.jpg" />
 
 ## Source and docs
 
