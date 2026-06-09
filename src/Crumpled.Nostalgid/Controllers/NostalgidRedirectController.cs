@@ -37,7 +37,7 @@ public class NostalgidRedirectController : ControllerBase
 
         return NotFound();
     }
-
+// Build the new style URLS
     private static string BuildContentEditorUrl(Guid key) =>
         $"/umbraco/section/content/workspace/document/edit/{key:D}/invariant";
 
