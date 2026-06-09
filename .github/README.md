@@ -8,7 +8,7 @@
 
 Surfacing the underlying integer node id for a Content/Media item and helping you find and load a Content/Media in the Umbraco backoffice based on its integer node id.
 
-<img src="docs/crumpled-nostalgid.png" width="150" />
+<img src="../docs/crumpled-nostalgid.png" width="150" />
 
 ## Why so?
 
@@ -36,7 +36,7 @@ It 'reinstates' the old style route, so /umbraco#/content/content/edit/1234 will
 
 And it provides a new Workspace View for every content item and media item, that surfaces the underlying integer id, with a handy 'click and copy approach' to save those seconds.. 
 
-<img src="docs/Nostalgid-workspace-view.jpg" />
+<img src="../docs/Nostalgid-workspace-view.jpg" />
 
 ## Not Nostalgic enough?
 
