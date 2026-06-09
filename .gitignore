@@ -36,6 +36,19 @@ ScaffoldingReadMe.txt
 # NuGet Symbol Packages
 *.snupkg
 
+# Visual Studio cache/options directory
+.vs/
+
+# Root-level Node dependencies and local tooling cache
+/node_modules/*
+*.lscache
+
+# Frontend generated assets (built from src/Crumpled.Nostalgid/Client)
+src/Crumpled.Nostalgid/wwwroot/App_Plugins/
+
+# Client dependencies
+src/Crumpled.Nostalgid/Client/node_modules/
+
 # dotenv environment variables file
 .env
 

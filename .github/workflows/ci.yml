@@ -1,0 +1,211 @@
+name: Verify Build
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PATH_TO_EXTENSION: "src/Crumpled.Nostalgid"
+  PATH_TO_TESTSITE: "src/Crumpled.Nostalgid.TestSite"
+  DOTNET_VERSION: '10'
+
+on:
+  push:
+    branches: [ "develop/v1", "release/v1", "feature/v1/*", "hotfix/v1/*" ]
+  pull_request:
+    branches: [ "develop/v1", "release/v1", "feature/v1/*", "hotfix/v1/*" ]
+  workflow_dispatch:
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.set-version.outputs.version }}
+      prerelease_id: ${{ steps.calculate-branch.outputs.prerelease_id }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Fetch all tags
+        run: git fetch --force --tags
+
+      - name: Calculate Branch Slug
+        id: calculate-branch
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "Current branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" == hotfix/* ]] || [[ "$BRANCH_NAME" == feature/* ]]; then
+            BRANCH_SLUG=$(echo "$BRANCH_NAME" | sed 's/feature\//ft-/g; s/hotfix\//hf-/g; s/\//--/g' | cut -c 1-12 | sed 's/-$//')
+            PRERELEASE_ID="00-${BRANCH_SLUG}"
+            echo "Branch slug: $BRANCH_SLUG"
+            echo "Prerelease ID: $PRERELEASE_ID"
+            echo "prerelease_id=$PRERELEASE_ID" >> $GITHUB_OUTPUT
+          else
+            echo "Branch does not match hotfix/* or feature/*, no prerelease ID needed"
+            echo "prerelease_id=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update .releaserc for current branch
+        if: ${{ steps.calculate-branch.outputs.prerelease_id != '' }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          PRERELEASE_ID="${{ steps.calculate-branch.outputs.prerelease_id }}"
+
+          echo "Adding branch config: $BRANCH_NAME with prerelease: $PRERELEASE_ID"
+
+          jq --arg name "$BRANCH_NAME" --arg prerelease "$PRERELEASE_ID" \
+            '.branches += [{"name": $name, "prerelease": $prerelease}]' \
+            .releaserc > .releaserc.tmp && mv .releaserc.tmp .releaserc
+
+          echo "Updated .releaserc:"
+          cat .releaserc
+
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dry_run: true
+          extra_plugins: |
+            @semantic-release/exec
+            @semantic-release/commit-analyzer
+            @semantic-release/release-notes-generator
+            @semantic-release/github
+            conventional-changelog-conventionalcommits
+
+      - name: Set Version
+        id: set-version
+        run: |
+          if [ -n "${{ steps.semantic.outputs.new_release_version }}" ]; then
+            echo "version=${{ steps.semantic.outputs.new_release_version }}" >> $GITHUB_OUTPUT
+          else
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -n "$LATEST_TAG" ]; then
+              LATEST_VERSION=${LATEST_TAG#v}
+              echo "version=${LATEST_VERSION}-dev.${{ github.run_number }}" >> $GITHUB_OUTPUT
+            else
+              echo "version=0.1.0-dev.${{ github.run_number }}" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build:
+    name: Build, Run, CodeGen and Package
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v6
+      with:
+        node-version: 'lts/*'
+
+    - name: Install dependencies
+      working-directory: ./${{env.PATH_TO_EXTENSION}}/Client
+      run: npm install
+
+    - name: Add GitHub Package Registry
+      run: |
+        dotnet nuget remove source github || true
+        dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/CrumpledDog/index.json"
+
+    - name: Cache NuGet
+      id: nuget-packages
+      uses: actions/cache@v5
+      with:
+        path: ~/.nuget/packages
+        key: nuget-cache-${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj*') }}
+        restore-keys: |
+          nuget-cache-${{ runner.os }}-nuget-
+
+    - name: Dotnet Format check
+      run: dotnet format --verify-no-changes --verbosity diagnostic
+
+    - name: Update Version Files
+      id: update-version
+      uses: CrumpledDog/Crumpled.Umbraco.Package.Actions/update-version-files@main
+      with:
+        semver: ${{ needs.setup.outputs.semver }}
+        path-to-extension: ${{ env.PATH_TO_EXTENSION }}
+
+    - name: Build Project
+      working-directory: ${{ env.PATH_TO_TESTSITE }}
+      run: dotnet build -c Release
+
+    - name: Start Project
+      working-directory: ${{ github.workspace }}/${{ env.PATH_TO_TESTSITE }}
+      shell: bash
+      run: |
+        nohup dotnet run --no-build --no-restore -c Release > ../app.log 2> ../app-errors.log &
+        echo "DOTNET_PID=$!" >> $GITHUB_ENV
+        echo "Started Umbraco with PID: $!"
+        echo "Waiting 5 seconds for initial startup..."
+        sleep 5
+
+    - name: Health Check
+      shell: bash
+      run: |
+        echo "Checking if Umbraco is responding..."
+        for i in {1..30}; do
+          if curl -k -s -o /dev/null -w "%{http_code}" https://localhost:44307 | grep -q "200\|302"; then
+            echo "Umbraco is responding!"
+            exit 0
+          fi
+          echo "Attempt $i: Not ready yet, waiting 2 seconds..."
+          sleep 2
+        done
+        echo "Umbraco failed to respond after 30 attempts"
+        exit 1
+
+    - name: CodeGen
+      working-directory: ${{ env.PATH_TO_EXTENSION }}
+      run: |
+        cd Client
+        npm run generate-client
+
+    - name: Stop Project
+      if: always()
+      shell: bash
+      run: |
+        if [ -n "$DOTNET_PID" ]; then
+          if ps -p $DOTNET_PID > /dev/null 2>&1; then
+            echo "Umbraco process $DOTNET_PID is still running, stopping it..."
+            kill $DOTNET_PID 2>/dev/null || true
+            sleep 2
+          else
+            echo "Umbraco process $DOTNET_PID had already stopped"
+          fi
+        else
+          echo "No DOTNET_PID set"
+        fi
+
+    - name: Build Client
+      working-directory: ${{ env.PATH_TO_EXTENSION }}
+      run: |
+        cd Client
+        npm run build
+
+    - name: Build slnx
+      run: dotnet build ${{ github.workspace }}/*.slnx -c Release /maxcpucount:1
+
+    - name: Pack NuGet Package
+      working-directory: ${{ env.PATH_TO_EXTENSION }}
+      run: dotnet pack --configuration Release /p:PackageVersion=${{ needs.setup.outputs.semver }} /p:FileVersion=${{ steps.update-version.outputs.file-version }}
+
+    - name: Install Package Validation Tool
+      run: dotnet tool install -g dotnet-validate --prerelease
+
+    - name: Validate NuGet Package
+      run: dotnet validate package local ${{ env.PATH_TO_EXTENSION }}/bin/Release/Crumpled.Nostalgid.*.nupkg

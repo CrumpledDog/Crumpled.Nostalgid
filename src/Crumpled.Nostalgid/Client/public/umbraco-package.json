@@ -1,0 +1,14 @@
+{
+  "id": "Crumpled.Nostalgid",
+  "name": "Crumpled.Nostalgid",
+  "version": "0.0.0",
+  "allowTelemetry": true,
+  "extensions": [
+    {
+      "name": "CrumpledNostalgid Bundle",
+      "alias": "Crumpled.Nostalgid.Bundle",
+      "type": "bundle",
+      "js": "/App_Plugins/crumpledNostalgid/crumpled-nostalgid.js"
+    }
+  ]
+}

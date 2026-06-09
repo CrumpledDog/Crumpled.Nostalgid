@@ -1,0 +1,30 @@
+{
+    "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json", 
+    "AuthorDetails": {
+    "Name": "Crumpled Dog",
+    "Description": "Umbraco consultants and developers specialising in Cloudflare, Azure, LLMs, AI, and Agents",
+    "Url": "https://github.com/CrumpledDog",
+    "ImageUrl": "https://github.com/crumpleddog.png",
+    "Contributors": [
+      {
+        "Name": "Jeavon Leopold",
+        "Url": "https://github.com/Jeavon"
+      },
+      {
+        "Name": "Marc Goodson",
+        "Url": "https://github.com/marcemarc"
+      },
+      {
+        "Name": "Crumpled Dog",
+        "Url": "https://github.com/CrumpledDog/"
+      }
+    ]
+  },
+    "Category": "Developer Tools",
+    "Description": "Helps surface the underlying integer id of Content/Media, and also find the Content/Media item in the backoffice if you only know the integer node id.",
+    "LicenseTypes": [ "Free" ],
+    "IssueTrackerUrl": "https://github.com/CrumpledDog/Crumpled.Nostalgid/issues",
+    "PackageType": "Package",
+    "Tags": ["nostalgia", "nodeid","working with the database"],
+    "Title": "Crumpled Nostalgid"
+  }
