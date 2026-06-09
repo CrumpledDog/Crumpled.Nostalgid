@@ -1,10 +1,8 @@
-# Crumpled.Nostalgid 
+# Crumpled Nostalgid 
 
 [![Downloads](https://img.shields.io/nuget/dt/Crumpled.Nostalgid?color=cc9900)](https://www.nuget.org/packages/Crumpled.Nostalgid/)
 [![NuGet](https://img.shields.io/nuget/vpre/Crumpled.Nostalgid?color=0273B3)](https://www.nuget.org/packages/Crumpled.Nostalgid)
 [![GitHub license](https://img.shields.io/github/license/CrumpledDog/Crumpled.Nostalgid?color=8AB803)](../LICENSE)
-
-# Crumpled Nostalgid
 
 Surfacing the underlying integer node id for a Content/Media item and helping you find and load a Content/Media in the Umbraco backoffice based on its integer node id.
 
