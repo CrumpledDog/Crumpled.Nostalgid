@@ -4,4 +4,23 @@
 [![NuGet](https://img.shields.io/nuget/vpre/Crumpled.Nostalgid?color=0273B3)](https://www.nuget.org/packages/Crumpled.Nostalgid)
 [![GitHub license](https://img.shields.io/github/license/CrumpledDog/Crumpled.Nostalgid?color=8AB803)](https://github.com/CrumpledDog/Crumpled.Nostalgid/blob/main/LICENSE)
 
-TODO: describe your package for nuget audience
+Surface and use Umbraco's underlying integer node IDs in modern backoffice workflows.
+
+<img src="https://raw.githubusercontent.com/CrumpledDog/Crumpled.Nostalgid/main/docs/crumpled-nostalgid.png" width="150" />
+
+## What it does
+
+- Adds legacy-style integer-ID redirect support for editor URLs.
+- Supports both legacy hash routes:
+	- `/umbraco#/content/content/edit/{id}`
+	- `/umbraco#/media/media/edit/{id}`
+- Redirects to modern key-based workspace URLs.
+- Adds a workspace view to display and copy the underlying integer ID.
+
+<img src="https://raw.githubusercontent.com/CrumpledDog/Crumpled.Nostalgid/main/docs/Nostalgid-workspace-view.jpg" />
+
+## Source and docs
+
+See the repository for usage details and implementation notes:
+
+https://github.com/CrumpledDog/Crumpled.Nostalgid
