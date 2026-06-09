@@ -9,7 +9,12 @@ import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { UUIButtonElement } from "@umbraco-cms/backoffice/external/uui";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UMB_CURRENT_USER_CONTEXT, UmbCurrentUserModel } from "@umbraco-cms/backoffice/current-user";
-import { crumpledNostalgidService, UserModel } from "../api/index.js";
+import * as nostalgidApi from "../api/index.js";
+import type { UserModel } from "../api/index.js";
+
+const crumpledNostalgidService =
+  (nostalgidApi as any).crumpledNostalgidService ??
+  (nostalgidApi as any).CrumpledNostalgidService;
 
 @customElement("example-dashboard")
 export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
